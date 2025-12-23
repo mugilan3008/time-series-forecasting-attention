@@ -1,119 +1,138 @@
-# Advanced Time Series Forecasting with Attention-based LSTM
+# Advanced Time Series Forecasting using SARIMA and Attention-based LSTM
 
-## 📌 Project Overview
-This project focuses on *advanced time series forecasting* using both
-traditional statistical models and deep learning techniques.
+## Project Overview
+This project focuses on forecasting power consumption using advanced time series techniques.
+A traditional statistical model (SARIMA) is implemented as a baseline and compared with a
+deep learning based Attention-enabled LSTM model.
 
-A *baseline SARIMA model* is implemented for comparison, followed by an
-*Attention-based LSTM neural network* to improve forecasting accuracy.
-The project demonstrates a complete end-to-end pipeline suitable for
-*academic evaluation and interview discussion*.
-
----
-
-## 🎯 Objectives
-- Perform time series preprocessing and scaling
-- Build a baseline forecasting model using SARIMA
-- Design an advanced Attention-based LSTM model
-- Compare actual vs predicted values
-- Evaluate performance using error metrics
+The objective of the project is to analyze multivariate power consumption data and predict
+future values while avoiding data leakage and maintaining academic correctness.
 
 ---
 
-## 🗂️ Project Structure
-advanced_time_series/ ├── data/ │   └── power.csv ├── step1_preprocessing.py ├── step2_baseline_sarima.py ├── step3_attention_lstm.py ├── step4_train_evaluate.py ├── report.txt ├── README.md └── requirements.txt
+## Dataset Description
+The dataset used in this project contains real-world household power consumption data.
+The data is provided in CSV format and includes the following features:
+
+- Global Active Power  
+- Global Reactive Power  
+- Voltage  
+- Global Intensity  
+
+Missing and invalid values are handled during the preprocessing stage.
 
 ---
 
-## ⚙️ Technologies Used
-- Python 3
-- NumPy
-- Pandas
-- Matplotlib
-- Scikit-learn
-- Statsmodels (SARIMA)
-- TensorFlow / Keras (LSTM + Attention)
+## Project Structure
+
+advanced_time_series/
+│
+├── data/
+│   ├── power.csv                 # Raw power consumption dataset
+│   ├── X_train.npy               # Training input data
+│   ├── y_train.npy               # Training target values
+│   ├── X_test.npy                # Testing input data
+│   ├── y_test.npy                # Testing target values
+│   └── attention_lstm_model.h5   # Saved Attention-based LSTM model
+│
+├── step1_preprocessing.py        # Data cleaning and normalization
+├── step2_baseline_sarima.py      # Baseline SARIMA model
+├── step3_attention_lstm.py       # Attention-based LSTM model creation
+├── step4_train_evaluate.py       # Model training and evaluation
+│
+├── requirements.txt              # Required Python libraries
+├── report.txt                    # Project report
+└── README.md                     # Project documentation
 
 ---
 
-## 🔄 Workflow Description
+## Methodology
 
 ### Step 1: Data Preprocessing
-- Load time series data
-- Handle datetime indexing
-- Apply Min-Max scaling
-- Create sliding window sequences
+- Load raw CSV data
+- Select relevant features
+- Handle missing values
+- Normalize data using Min-Max scaling
+- Split data into training and testing sets using time-based splitting
 
-### Step 2: Baseline Model (SARIMA)
-- Implement SARIMA model using statsmodels
-- Generate baseline forecasts
-- Visualize actual vs forecasted values
+### Step 2: Baseline SARIMA Model
+- Use Global Active Power as the target variable
+- Train a SARIMA model on training data
+- Generate forecasts for test data
+- Evaluate using MAE and RMSE metrics
 
 ### Step 3: Attention-based LSTM Model
-- Build LSTM layers using TensorFlow/Keras
-- Apply attention mechanism to focus on important time steps
-- Train the deep learning model on time series sequences
+- Create time series sequences from multivariate data
+- Build an LSTM model with an attention mechanism
+- Save the trained model for later evaluation
 
-### Step 4: Training and Evaluation
-- Generate predictions on test data
-- Evaluate using MAE and RMSE
-- Plot actual vs predicted values
+### Step 4: Model Training and Evaluation
+- Load the saved Attention LSTM model
+- Train the model on historical sequences
+- Evaluate performance using MAE and RMSE
+- Compare results with the SARIMA baseline
 
 ---
 
-## 📊 Evaluation Metrics
-- *MAE (Mean Absolute Error)*
-- *RMSE (Root Mean Square Error)*
+## Evaluation Metrics
+The models are evaluated using the following metrics:
 
-These metrics are used to assess forecasting accuracy.
+- Mean Absolute Error (MAE)
+- Root Mean Squared Error (RMSE)
+
+These metrics provide a clear comparison between the statistical and deep learning approaches.
+
+---
+
+## Key Features
+- Multivariate time series forecasting
+- Baseline statistical comparison (SARIMA)
+- Attention-based deep learning model
+- No data leakage (time-based splitting)
+- Modular and readable code structure
+- CPU-compatible execution
 
 ---
 
 ## How to Run the Project
 
-1. Install dependencies:
-```bash
+1. Install required libraries:
+Install all the required Python packages using the following command:
 pip install -r requirements.txt
-```
 
-
-Run preprocessing:
+2.Run data preprocessing
+This step cleans the dataset, handles missing values, and performs normalization.
 python step1_preprocessing.py
 
-Run baseline SARIMA model:
+3.Run baseline SARIMA model
+This step builds and evaluates the traditional SARIMA model.
 python step2_baseline_sarima.py
 
-Run Attention-based LSTM:
+4.Build Attention-based LSTM model
+This step creates the deep learning model using LSTM with attention mechanism.
 python step3_attention_lstm.py
 
-Train and evaluate:
+5.Train and evaluate the models
+This step trains the Attention LSTM model and evaluates its performance using MAE and RMSE.
 python step4_train_evaluate.py
+---
 
 ## Conclusion
+This project demonstrates the effectiveness of combining traditional time series models
+with deep learning approaches for power consumption forecasting.
+The Attention-based LSTM model captures temporal dependencies more effectively than
+the baseline SARIMA model.
 
-In this project, an advanced time series forecasting pipeline was implemented using both
-a traditional statistical model (SARIMA) and a deep learning model (Attention-based LSTM).
+---
 
-The baseline SARIMA model provides a classical reference for forecasting performance,
-while the Attention-based LSTM captures temporal dependencies more effectively.
+## Future Scope
+- Use larger datasets for improved generalization
+- Hyperparameter tuning for LSTM model
+- Visualization of attention weights
+- Deployment of the trained model
 
-Experimental results show that the Attention-based LSTM model achieves lower error
-values (MAE and RMSE) compared to the SARIMA model, demonstrating its superiority
-in modeling complex time series patterns.
-
-This project highlights the effectiveness of deep learning and attention mechanisms
-for real-world energy consumption forecasting tasks.
-
-## Future Work
-
-- Increase the dataset size to improve generalization.
-- Include additional features such as sub-metering values and reactive power.
-- Apply advanced attention mechanisms such as Transformer models.
-- Perform hyperparameter tuning for improved forecasting accuracy.
+---
 
 ## Author
-
-Name: Mugilan  
-Project Type: Advanced Time Series Forecasting  
-Model Used: SARIMA, Attention-based LSTM  
-Purpose: Academic Project / Interview Demonstration
+Mugilan G
+Project developed as part of an academic submission.

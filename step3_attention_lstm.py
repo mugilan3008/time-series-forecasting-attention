@@ -1,75 +1,56 @@
 import numpy as np
-import pandas as pd
-from sklearn.preprocessing import MinMaxScaler
+import tensorflow as tf
+from tensorflow.keras.layers import Input, LSTM, Dense, Lambda
 from tensorflow.keras.models import Model
-from tensorflow.keras.layers import LSTM, Dense, Input, Permute, Multiply, Flatten
-from tensorflow.keras.optimizers import Adam
 
-# -----------------------------
-# Load and preprocess data
-# -----------------------------
-df = pd.read_csv("data/power.csv")
+# -------------------------------------------------
+# Load data created from preprocessing step
+# -------------------------------------------------
+X_train = np.load("data/X_train.npy")
+y_train = np.load("data/y_train.npy")
 
-df['datetime'] = pd.to_datetime(df['datetime'], dayfirst=True)
-df.set_index('datetime', inplace=True)
+print("X_train shape before sequencing:", X_train.shape)
 
-data = df[['global_active_power']]
+# -------------------------------------------------
+# Convert data into time-series sequences
+# -------------------------------------------------
+TIME_STEPS = 5
 
-scaler = MinMaxScaler()
-scaled_data = scaler.fit_transform(data)
+def create_sequences(X, y, steps):
+    X_seq = []
+    y_seq = []
 
-# -----------------------------
-# Create sequences
-# -----------------------------
-def create_sequences(data, time_steps=1):
-    X, y = [], []
-    for i in range(time_steps, len(data)):
-        X.append(data[i-time_steps:i, 0])
-        y.append(data[i, 0])
-    return np.array(X), np.array(y)
+    for i in range(len(X) - steps):
+        X_seq.append(X[i:i + steps])
+        y_seq.append(y[i + steps])
 
-TIME_STEPS = 1
-X, y = create_sequences(scaled_data, TIME_STEPS)
+    return np.array(X_seq), np.array(y_seq)
 
-X = X.reshape((X.shape[0], X.shape[1], 1))
+X_train_seq, y_train_seq = create_sequences(X_train, y_train, TIME_STEPS)
 
-print("X shape:", X.shape)
-print("y shape:", y.shape)
+print("X_train shape after sequencing:", X_train_seq.shape)
+print("y_train shape after sequencing:", y_train_seq.shape)
 
-# -----------------------------
-# Attention Mechanism
-# -----------------------------
-from tensorflow.keras.layers import Softmax
+# -------------------------------------------------
+# Build Attention-based LSTM model
+# -------------------------------------------------
+inputs = Input(shape=(X_train_seq.shape[1], X_train_seq.shape[2]))
 
-def attention_block(inputs):
-    # inputs shape: (batch_size, time_steps, hidden_units)
+# LSTM layer
+lstm_output = LSTM(64, return_sequences=True)(inputs)
 
-    score = Dense(1)(inputs)              # (batch, time_steps, 1)
-    attention_weights = Softmax(axis=1)(score)  # (batch, time_steps, 1)
+# Simple attention using average across time steps
+attention_output = Lambda(lambda x: tf.reduce_mean(x, axis=1))(lstm_output)
 
-    context = Multiply()([inputs, attention_weights])
-    return context
+# Final prediction layer
+output = Dense(1)(attention_output)
 
-# -----------------------------
-# Build Attention LSTM Model
-# -----------------------------
-input_layer = Input(shape=(X.shape[1], 1))
-lstm_out = LSTM(50, return_sequences=True)(input_layer)
+model = Model(inputs, output)
+model.compile(optimizer="adam", loss="mse")
 
-attention_out = attention_block(lstm_out)
+# -------------------------------------------------
+# Save model (training handled in next step)
+# -------------------------------------------------
+model.save("data/attention_lstm_model.h5")
 
-lstm_out2 = LSTM(50)(attention_out)
-output = Dense(1)(lstm_out2)
-
-model = Model(inputs=input_layer, outputs=output)
-
-model.compile(
-    optimizer=Adam(learning_rate=0.001),
-    loss='mse'
-)
-
-model.summary()
-
-# -----------------------------
-# Train Model
-# ----------------
+print("Attention LSTM model created and saved successfully")

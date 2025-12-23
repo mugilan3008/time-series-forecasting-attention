@@ -1,39 +1,46 @@
-import pandas as pd
 import numpy as np
+import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
 
 # Load CSV
 df = pd.read_csv("data/power.csv")
 
-print("CSV Columns:")
-print(df.columns)
-print(df.head())
+# Convert datetime
+df["datetime"] = pd.to_datetime(df["datetime"], dayfirst=True)
+df = df.sort_values("datetime")
 
-# Datetime handling (IMPORTANT FIX)
-df['datetime'] = pd.to_datetime(df['datetime'], dayfirst=True)
-df.set_index('datetime', inplace=True)
+# Select features (multivariate)
+features = [
+    "Global_active_power",
+    "Global_reactive_power",
+    "Voltage",
+    "Global_intensity"
+]
 
-# Target column
-data = df[['global_active_power']]
+data = df[features].values
 
-# Scaling
+# Scale
 scaler = MinMaxScaler()
-scaled_data = scaler.fit_transform(data)
+scaled = scaler.fit_transform(data)
 
-# Sliding window function
-def create_sequences(data, time_steps=60):
-    X, y = [], []
-    for i in range(time_steps, len(data)):
-        X.append(data[i-time_steps:i, 0])
-        y.append(data[i, 0])
-    return np.array(X), np.array(y)
+# Train-test split (time based)
+split = int(len(scaled) * 0.8)
+train = scaled[:split]
+test = scaled[split:]
 
-# Create sequences
-X, y = create_sequences(scaled_data, 1)
-print("samples:",X.shape)
+# X = all features, y = target (Global_active_power)
+X_train = train
+y_train = train[:, 0]
 
-# Reshape for LSTM
-X = X.reshape((X.shape[0], X.shape[1], 1))
+X_test = test
+y_test = test[:, 0]
 
-print("X shape:", X.shape)
-print("y shape:", y.shape)
+# Save files (IMPORTANT)
+np.save("data/X_train.npy", X_train)
+np.save("data/y_train.npy", y_train)
+np.save("data/X_test.npy", X_test)
+np.save("data/y_test.npy", y_test)
+
+print("Preprocessing completed")
+print("X_train shape:", X_train.shape)
+print("X_test shape:", X_test.shape)

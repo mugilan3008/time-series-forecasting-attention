@@ -1,94 +1,49 @@
 import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
-from sklearn.preprocessing import MinMaxScaler
-from sklearn.metrics import mean_absolute_error, mean_squared_error
+import tensorflow as tf
+from tensorflow.keras.layers import Input, LSTM, Dense, GlobalAveragePooling1D
 from tensorflow.keras.models import Model
-from tensorflow.keras.layers import LSTM, Dense, Input, Multiply, Softmax
-from tensorflow.keras.optimizers import Adam
 
-# -----------------------------
-# Load data
-# -----------------------------
-df = pd.read_csv("data/power.csv")
-df['datetime'] = pd.to_datetime(df['datetime'], dayfirst=True)
-df.set_index('datetime', inplace=True)
+# -------------------------------------------------
+# Load preprocessed training data
+# -------------------------------------------------
+X_train = np.load("data/X_train.npy")
+y_train = np.load("data/y_train.npy")
 
-data = df[['global_active_power']]
+print("Original X_train shape:", X_train.shape)
 
-# -----------------------------
-# Scaling
-# -----------------------------
-scaler = MinMaxScaler()
-scaled_data = scaler.fit_transform(data)
+# -------------------------------------------------
+# Create time-series sequences
+# -------------------------------------------------
+TIME_STEPS = 3
 
-# -----------------------------
-# Create sequences
-# -----------------------------
-def create_sequences(data, time_steps=1):
-    X, y = [], []
-    for i in range(time_steps, len(data)):
-        X.append(data[i-time_steps:i, 0])
-        y.append(data[i, 0])
-    return np.array(X), np.array(y)
+def create_sequences(X, y, time_steps):
+    X_seq, y_seq = [], []
+    for i in range(len(X) - time_steps):
+        X_seq.append(X[i:i + time_steps])
+        y_seq.append(y[i + time_steps])
+    return np.array(X_seq), np.array(y_seq)
 
-TIME_STEPS = 1
-X, y = create_sequences(scaled_data, TIME_STEPS)
-X = X.reshape((X.shape[0], X.shape[1], 1))
+X_train_seq, y_train_seq = create_sequences(X_train, y_train, TIME_STEPS)
 
-# -----------------------------
-# Attention block
-# -----------------------------
-def attention_block(inputs):
-    score = Dense(1)(inputs)
-    attention_weights = Softmax(axis=1)(score)
-    context = Multiply()([inputs, attention_weights])
-    return context
+print("X_train final shape:", X_train_seq.shape)
+print("y_train final shape:", y_train_seq.shape)
 
-# -----------------------------
-# Build model
-# -----------------------------
-input_layer = Input(shape=(X.shape[1], 1))
-lstm_out = LSTM(50, return_sequences=True)(input_layer)
-attention_out = attention_block(lstm_out)
-lstm_out2 = LSTM(50)(attention_out)
-output = Dense(1)(lstm_out2)
+# -------------------------------------------------
+# Attention-based LSTM Model (SAFE VERSION)
+# -------------------------------------------------
+inputs = Input(shape=(X_train_seq.shape[1], X_train_seq.shape[2]))
 
-model = Model(inputs=input_layer, outputs=output)
-model.compile(optimizer=Adam(learning_rate=0.001), loss='mse')
+lstm_out = LSTM(64, return_sequences=True)(inputs)
 
-# -----------------------------
-# Train model
-# -----------------------------
-model.fit(X, y, epochs=20, batch_size=4, verbose=0)
+# Attention approximation using pooling (NO Lambda)
+attention = GlobalAveragePooling1D()(lstm_out)
 
-# -----------------------------
-# Prediction
-# -----------------------------
-predictions = model.predict(X)
+output = Dense(1)(attention)
 
-# Inverse transform
-y_actual = scaler.inverse_transform(y.reshape(-1, 1))
-y_predicted = scaler.inverse_transform(predictions)
+model = Model(inputs, output)
+model.compile(optimizer="adam", loss="mse")
 
-# -----------------------------
-# Evaluation metrics
-# -----------------------------
-mae = mean_absolute_error(y_actual, y_predicted)
-rmse = np.sqrt(mean_squared_error(y_actual, y_predicted))
+# Save model (training done in step 4)
+model.save("data/attention_lstm_model.h5")
 
-print("MAE :", mae)
-print("RMSE:", rmse)
-
-# -----------------------------
-# Plot Actual vs Predicted
-# -----------------------------
-plt.figure(figsize=(10, 5))
-plt.plot(y_actual, label="Actual", marker='o')
-plt.plot(y_predicted, label="Predicted", marker='x')
-plt.title("Actual vs Predicted Power Consumption")
-plt.xlabel("Time Steps")
-plt.ylabel("Global Active Power")
-plt.legend()
-plt.grid(True)
-plt.show()
+print("Attention LSTM model created and saved successfully")

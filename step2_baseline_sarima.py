@@ -1,37 +1,30 @@
-import pandas as pd
-import matplotlib.pyplot as plt
+import numpy as np
 from statsmodels.tsa.statespace.sarimax import SARIMAX
+from sklearn.metrics import mean_absolute_error, mean_squared_error
 
-# Load preprocessed data
-df = pd.read_csv("data/power.csv")
+# Load processed data
+train = np.load("data/train.npy")
+test = np.load("data/test.npy")
 
-# Convert datetime
-df['datetime'] = pd.to_datetime(df['datetime'])
-df.set_index('datetime', inplace=True)
+# Target column (global_active_power)
+y_train = train[:, 0]
+y_test = test[:, 0]
 
-# Target variable
-series = df['global_active_power']
-
-# Train-test split
-train_size = int(len(series) * 0.8)
-train, test = series[:train_size], series[train_size:]
-
-# SARIMA model
+# SARIMA model (baseline)
 model = SARIMAX(
-    train,
+    y_train,
     order=(1, 1, 1),
-    seasonal_order=(1, 1, 1, 24)
+    seasonal_order=(0, 0, 0, 0)   # safe for small data
 )
 
-model_fit = model.fit(disp=False)
+results = model.fit(disp=False)
 
 # Forecast
-forecast = model_fit.forecast(steps=len(test))
+forecast = results.forecast(steps=len(y_test))
 
-# Plot
-plt.figure(figsize=(10,5))
-plt.plot(test.index, test, label="Actual")
-plt.plot(test.index, forecast, label="SARIMA Forecast")
-plt.legend()
-plt.title("Baseline SARIMA Forecast")
-plt.show()
+# Evaluation
+mae = mean_absolute_error(y_test, forecast)
+rmse = np.sqrt(mean_squared_error(y_test, forecast))
+
+print("SARIMA MAE:", mae)
+print("SARIMA RMSE:", rmse)
