@@ -1,56 +1,58 @@
 import numpy as np
-import tensorflow as tf
-from tensorflow.keras.layers import Input, LSTM, Dense, Lambda
 from tensorflow.keras.models import Model
+from tensorflow.keras.layers import Input, LSTM, Dense, Attention
+from tensorflow.keras.losses import MeanSquaredError
 
-# -------------------------------------------------
-# Load data created from preprocessing step
-# -------------------------------------------------
+# --------------------------------------------------
+# Load training data only to identify input dimensions
+# --------------------------------------------------
 X_train = np.load("data/X_train.npy")
-y_train = np.load("data/y_train.npy")
 
-print("X_train shape before sequencing:", X_train.shape)
+# --------------------------------------------------
+# Define input layer based on time steps and features
+# --------------------------------------------------
+inputs = Input(shape=(X_train.shape[1], X_train.shape[2]))
 
-# -------------------------------------------------
-# Convert data into time-series sequences
-# -------------------------------------------------
-TIME_STEPS = 5
+# --------------------------------------------------
+# First LSTM layer to capture temporal patterns
+# --------------------------------------------------
+lstm_out = LSTM(
+    units=64,
+    return_sequences=True
+)(inputs)
 
-def create_sequences(X, y, steps):
-    X_seq = []
-    y_seq = []
+# --------------------------------------------------
+# Attention mechanism to focus on important time steps
+# --------------------------------------------------
+attention_output = Attention()(
+    [lstm_out, lstm_out]
+)
 
-    for i in range(len(X) - steps):
-        X_seq.append(X[i:i + steps])
-        y_seq.append(y[i + steps])
+# --------------------------------------------------
+# Second LSTM layer for sequence summarization
+# --------------------------------------------------
+lstm_final = LSTM(
+    units=32
+)(attention_output)
 
-    return np.array(X_seq), np.array(y_seq)
+# --------------------------------------------------
+# Output layer for forecasting the target value
+# --------------------------------------------------
+output = Dense(1)(lstm_final)
 
-X_train_seq, y_train_seq = create_sequences(X_train, y_train, TIME_STEPS)
+# --------------------------------------------------
+# Build and compile the Attention-based LSTM model
+# --------------------------------------------------
+model = Model(inputs=inputs, outputs=output)
 
-print("X_train shape after sequencing:", X_train_seq.shape)
-print("y_train shape after sequencing:", y_train_seq.shape)
+model.compile(
+    optimizer="adam",
+    loss=MeanSquaredError()
+)
 
-# -------------------------------------------------
-# Build Attention-based LSTM model
-# -------------------------------------------------
-inputs = Input(shape=(X_train_seq.shape[1], X_train_seq.shape[2]))
+# --------------------------------------------------
+# Save only the model architecture (training in next step)
+# --------------------------------------------------
+model.save("data/attention_lstm_model.keras")
 
-# LSTM layer
-lstm_output = LSTM(64, return_sequences=True)(inputs)
-
-# Simple attention using average across time steps
-attention_output = Lambda(lambda x: tf.reduce_mean(x, axis=1))(lstm_output)
-
-# Final prediction layer
-output = Dense(1)(attention_output)
-
-model = Model(inputs, output)
-model.compile(optimizer="adam", loss="mse")
-
-# -------------------------------------------------
-# Save model (training handled in next step)
-# -------------------------------------------------
-model.save("data/attention_lstm_model.h5")
-
-print("Attention LSTM model created and saved successfully")
+print("Attention-based LSTM model architecture saved successfully")

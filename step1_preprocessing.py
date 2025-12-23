@@ -1,15 +1,10 @@
-import numpy as np
 import pandas as pd
+import numpy as np
 from sklearn.preprocessing import MinMaxScaler
 
-# Load CSV
+# Load dataset
 df = pd.read_csv("data/power.csv")
 
-# Convert datetime
-df["datetime"] = pd.to_datetime(df["datetime"], dayfirst=True)
-df = df.sort_values("datetime")
-
-# Select features (multivariate)
 features = [
     "Global_active_power",
     "Global_reactive_power",
@@ -17,30 +12,34 @@ features = [
     "Global_intensity"
 ]
 
-data = df[features].values
+df = df[features].dropna()
 
-# Scale
+# Scale data
 scaler = MinMaxScaler()
-scaled = scaler.fit_transform(data)
+scaled = scaler.fit_transform(df)
+
+# -------- TIME SERIES SEQUENCES --------
+TIME_STEPS = 5
+
+X, y = [], []
+for i in range(len(scaled) - TIME_STEPS):
+    X.append(scaled[i:i+TIME_STEPS])
+    y.append(scaled[i+TIME_STEPS, 0])  # target
+
+X = np.array(X)
+y = np.array(y)
 
 # Train-test split (time based)
-split = int(len(scaled) * 0.8)
-train = scaled[:split]
-test = scaled[split:]
+split = int(len(X) * 0.8)
 
-# X = all features, y = target (Global_active_power)
-X_train = train
-y_train = train[:, 0]
+X_train, X_test = X[:split], X[split:]
+y_train, y_test = y[:split], y[split:]
 
-X_test = test
-y_test = test[:, 0]
-
-# Save files (IMPORTANT)
+# Save
 np.save("data/X_train.npy", X_train)
-np.save("data/y_train.npy", y_train)
 np.save("data/X_test.npy", X_test)
+np.save("data/y_train.npy", y_train)
 np.save("data/y_test.npy", y_test)
 
-print("Preprocessing completed")
-print("X_train shape:", X_train.shape)
-print("X_test shape:", X_test.shape)
+print("Preprocessing done")
+print("X_train shape:", X_train.shape)  # MUST be 3D
