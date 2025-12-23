@@ -1,0 +1,95 @@
+REPORT: Advanced Time Series Forecasting using Attention-based Deep Learning
+
+1. Introduction
+Time series forecasting plays a crucial role in energy management systems. Accurate prediction of power consumption helps in efficient resource planning and demand forecasting. Traditional statistical models such as ARIMA/SARIMA perform well for linear patterns but struggle with complex temporal dependencies.
+This project implements an advanced time series forecasting system using Baseline SARIMA and a Deep Learning Attention-based LSTM model to improve prediction accuracy.
+
+2. Dataset Description
+Dataset Name: Household Power Consumption (sampled)
+Source: Energy consumption time series data
+Features Used:
+datetime
+global_active_power
+voltage
+sub_metering_1
+Target Variable: global_active_power
+Time Interval: Minute-level readings
+
+3. Data Preprocessing (Step 1)
+The preprocessing stage prepares raw data for modeling:
+Combined date and time into a single datetime column
+Converted datetime to pandas datetime format
+Selected relevant features
+Applied MinMax scaling
+Created sliding window sequences for supervised learning
+Reshaped data to 3D format for LSTM input
+Output Shape:
+X shape: (samples, time_steps, features)
+y shape: (samples,)
+
+4. Baseline Model – SARIMA (Step 2)
+To establish a baseline, a Seasonal ARIMA (SARIMA) model was implemented.
+Why SARIMA?
+Handles seasonality
+Common benchmark for time series forecasting
+Model Configuration:
+SARIMAX with optimized parameters
+Forecasted future values
+Compared actual vs predicted values visually
+Observation:
+SARIMA captures overall trend
+Fails to adapt to non-linear variations
+
+5. Proposed Model – Attention-based LSTM (Step 3)
+To overcome limitations of SARIMA, a Deep Learning model with Attention mechanism was developed.
+Architecture:
+Input Layer
+LSTM Layer (50 units, return sequences)
+Attention Mechanism
+Context-aware LSTM
+Dense Output Layer
+Why Attention?
+Focuses on important time steps
+Improves long-term dependency learning
+Enhances prediction accuracy
+Framework Used:
+TensorFlow / Keras (Functional API)
+
+6. Model Training & Evaluation (Step 4)
+The Attention LSTM model was trained and evaluated using standard regression metrics.
+Loss Function: Mean Squared Error (MSE)
+Optimizer: Adam
+Evaluation Metrics:
+MAE (Mean Absolute Error)
+RMSE (Root Mean Squared Error)
+Visualization:
+Actual vs Predicted power consumption plotted
+Attention-based model shows closer alignment with actual values
+
+7. Results & Comparison
+Model
+Performance
+SARIMA
+Captures trend but less accurate
+Attention LSTM
+Better accuracy and adaptability
+Conclusion:
+The Attention-based LSTM model outperforms the traditional SARIMA baseline, especially in handling non-linear temporal patterns.
+
+8. Conclusion
+This project successfully demonstrates an advanced time series forecasting system combining statistical and deep learning approaches. The Attention-based LSTM model significantly improves prediction accuracy compared to the baseline SARIMA model.
+Such models are highly suitable for real-world energy forecasting applications.
+
+9. Future Enhancements
+Use larger datasets
+Add multi-head attention
+Hyperparameter tuning
+Deploy model using REST API or dashboard
+
+10. Tools & Technologies Used
+Python
+Pandas, NumPy
+Matplotlib
+Statsmodels (SARIMA)
+TensorFlow / Keras
+VS Code
