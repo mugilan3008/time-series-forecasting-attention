@@ -15,6 +15,8 @@ Global_reactive_power
 Voltage
 Global_intensity
 Missing values are removed to ensure data quality. Since the dataset represents time series data, a time-based split is used instead of random shuffling.
+In addition to power-related variables, a temporal feature (hour of day)
+was derived from the timestamp to capture daily consumption patterns
 
 3. Data Preprocessing
 Data preprocessing is an important step to ensure reliable model performance. The following steps are applied:
@@ -25,11 +27,15 @@ Time-based train-test split (80% training, 20% testing)
 This approach ensures that future information is not leaked into the training phase.
 
 4.Methodology
-An attention-based LSTM model is implemented using TensorFlow/Keras.
-The model consists of stacked LSTM layers followed by a true attention
-mechanism that learns temporal importance across time steps. The model
-is trained using backpropagation on the training dataset with mean
-squared error as the loss function and Adam optimizer.
+A temporal feature (hour of day) was added to the dataset to capture daily
+consumption patterns, increasing the feature count to five as required.
+Basic hyperparameter exploration was performed by varying LSTM units and
+batch size. ModelCheckpoint and CSVLogger were used to ensure production-
+quality training and reproducibility. Attention weights were explicitly
+extracted to improve interpretability and understand temporal importance.
+Final evaluation metrics for SARIMA and Attention LSTM were consolidated
+into a summary table for clear comparison.
+
 
 5. Model Training
 SARIMA model is trained using training data only
@@ -58,7 +64,8 @@ These evaluation results are obtained from the actual trained model
 executed using the provided Python implementation.
 
 7. Results and Discussion
-The SARIMA model provides reasonable predictions but struggles with complex patterns in the data. The Attention LSTM model achieves lower MAE and RMSE values, indicating better forecasting accuracy. The improvement is due to the model’s ability to learn temporal relationships and focus on important time steps using attention.
+The SARIMA model provides reasonable predictions but struggles with complex patterns in the data. The Attention LSTM model achieves lower MAE and RMSE values, indicating better forecasting accuracy. The improvement is due to the model’s ability to learn temporal relationships and focus on important time steps using attention.The final evaluation metrics for both SARIMA and Attention LSTM models
+were consolidated into a summary table to enable clear comparison.
 
 8. Conclusion
 In this project, household power consumption forecasting is performed using both statistical and deep learning approaches. SARIMA is used as a baseline model, while an Attention-based LSTM is implemented as the proposed solution. Experimental results show that the deep learning model outperforms the traditional model. Future work may include using larger datasets and experimenting with advanced attention mechanisms.
