@@ -54,5 +54,25 @@ model.compile(
 # Save only the model architecture (training in next step)
 # --------------------------------------------------
 model.save("data/attention_lstm_model.keras")
+# --------------------------------------------------
+# Save attention weights for interpretability
+# --------------------------------------------------
+import numpy as np
+from tensorflow.keras.models import Model
 
-print("Attention-based LSTM model architecture saved successfully")
+# Load training data
+X_train = np.load("data/X_train.npy")
+
+# Create attention extraction model
+attention_model = Model(
+    inputs=inputs,
+    outputs=attention_output
+)
+
+# Get attention weights
+attention_weights = attention_model.predict(X_train)
+
+# Save attention weights
+np.save("data/attention_weights.npy", attention_weights)
+
+print("Attention weights saved successfully for interpretation")
