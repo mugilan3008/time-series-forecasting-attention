@@ -4,12 +4,15 @@ from sklearn.preprocessing import MinMaxScaler
 
 # Load dataset
 df = pd.read_csv("data/power.csv")
+df["datetime"] = pd.to_datetime(df["datetime"], format="%d-%m-%Y %H:%M")
+df["hour"] = df["datetime"].dt.hour
 
 features = [
     "Global_active_power",
     "Global_reactive_power",
     "Voltage",
     "Global_intensity"
+    "hour"
 ]
 
 df = df[features].dropna()
